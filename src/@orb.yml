@@ -1,10 +1,29 @@
 version: 2.1
 
+orbs:
+  aws-s3: circleci/aws-s3@3.0
+
 description: >
   Sample orb description
 # What will your orb allow users to accomplish?
 # Descriptions should be short, simple, and informative.
-
+jobs:
+  - sync_and_copy:
+      circleci_ip_ranges: true # opts the job into the IP ranges feature
+      docker:
+        - image: 'cimg/base:stable'
+      steps:
+        - checkout
+        - run: mkdir bucket && echo "lorem ipsum" > bucket/build_asset.txt
+        - aws-s3/sync:
+            arguments: |
+              --cache-control "max-age=86400"
+            from: bucket
+            to: 's3://jasur-webinar-demo-bucket/<<pipeline.number>>/'
+        - aws-s3/copy:
+            arguments: '--dryrun'
+            from: bucket/build_asset.txt
+          to: 's3://jasur-webinar-demo-bucket/<<pipeline.number>>/'
 # This information will be displayed in the orb registry and is not mandatory.
 display:
   home_url: "https://www.website.com/docs"
